@@ -1,0 +1,17 @@
+class Solution {
+public:
+    bool check(vector<int>& nums) {
+        int count = 0;
+        int n = nums.size();
+
+        // Count how many times a drop (nums[i] > nums[i+1]) occurs
+        for (int i = 0; i < n; i++) {
+            if (nums[i] > nums[(i + 1) % n]) {
+                count++;
+            }
+        }
+
+        // If count is more than 1, the array is not sorted with at most one rotation
+        return count <= 1;
+    }
+};
