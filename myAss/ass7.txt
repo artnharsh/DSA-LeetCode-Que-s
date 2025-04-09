@@ -1,0 +1,521 @@
+
+C:\Users\patil>mysql -u root -p
+Enter password: *******
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 16
+Server version: 8.0.41 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> create database ass7;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use ass7;
+Database changed
+mysql> CREATE TABLE Departments (
+    ->     DepartmentID INT PRIMARY KEY AUTO_INCREMENT,
+    ->     DeptName VARCHAR(100) UNIQUE NOT NULL,
+    ->     HOD VARCHAR(100) NOT NULL
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> CREATE TABLE Students (
+    ->     StudentID INT PRIMARY KEY AUTO_INCREMENT,
+    ->     Name VARCHAR(100) NOT NULL,
+    ->     Age INT CHECK (Age >= 18),
+    ->     DepartmentID INT,
+    ->     CGPA DECIMAL(3,2) CHECK (CGPA BETWEEN 0 AND 10),
+    ->     FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID) ON DELETE SET NULL
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> CREATE TABLE Courses (
+    ->     CourseID VARCHAR(10) PRIMARY KEY,
+    ->     CourseName VARCHAR(100) NOT NULL,
+    ->     DepartmentID INT,
+    ->     FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID) ON DELETE CASCADE
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> CREATE TABLE Enrollments (
+    ->     EnrollmentID INT PRIMARY KEY AUTO_INCREMENT,
+    ->     StudentID INT,
+    ->     CourseID VARCHAR(10),
+    ->     Marks INT CHECK (Marks BETWEEN 0 AND 100),
+    ->     FOREIGN KEY (StudentID) REFERENCES Students(StudentID),
+    ->     FOREIGN KEY (CourseID) REFERENCES Courses(CourseID),
+    ->     UNIQUE (StudentID, CourseID)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> describe Enrollments;
++--------------+-------------+------+-----+---------+----------------+
+| Field        | Type        | Null | Key | Default | Extra          |
++--------------+-------------+------+-----+---------+----------------+
+| EnrollmentID | int         | NO   | PRI | NULL    | auto_increment |
+| StudentID    | int         | YES  | MUL | NULL    |                |
+| CourseID     | varchar(10) | YES  | MUL | NULL    |                |
+| Marks        | int         | YES  |     | NULL    |                |
++--------------+-------------+------+-----+---------+----------------+
+4 rows in set (0.01 sec)
+
+mysql> INSERT INTO Departments (DeptName, HOD)
+    -> VALUES
+    -> ('Computer Sci', 'Dr. Smith'),
+    -> ('Electrical', 'Dr. Johnson'),
+    -> ('Mechanical', 'Dr. Brown');
+Query OK, 3 rows affected (0.01 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Students (Name, Age, DepartmentID, CGPA)
+    -> VALUES
+    -> ('Alice', 22, 1, 9.2),
+    -> ('Bob', 23, 2, 8.5),
+    -> ('Charlie', 21, 3, 7.8),
+    -> ('David', 24, 1, 8.9),
+    -> ('Eve', 22, 2, 9.0);
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Courses (CourseID, CourseName, DepartmentID)
+    -> VALUES
+    -> ('CSE101', 'Introduction to Computer Science', 1),
+    -> ('ECE101', 'Basic Electrical Engineering', 2),
+    -> ('ME101', 'Introduction to Mechanical Engineering', 3),
+    -> ('CSE102', 'Data Structures and Algorithms', 1),
+    -> ('ECE102', 'Circuit Analysis', 2);
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Enrollments (StudentID, CourseID, Marks)
+    -> VALUES
+    -> (1, 'CSE101', 90),
+    -> (1, 'CSE102', 95),
+    -> (2, 'ECE101', 75),
+    -> (2, 'ECE102', 80),
+    -> (3, 'ME101', 85),
+    -> (4, 'CSE101', 88),
+    -> (4, 'CSE102', 92),
+    -> (5, 'ECE101', 70),
+    -> (5, 'ECE102', 65);
+Query OK, 9 rows affected (0.01 sec)
+Records: 9  Duplicates: 0  Warnings: 0
+
+mysql> -- Find students who have a CGPA higher than the university average CGPA
+mysql> select *from Students;
++-----------+---------+------+--------------+------+
+| StudentID | Name    | Age  | DepartmentID | CGPA |
++-----------+---------+------+--------------+------+
+|         1 | Alice   |   22 |            1 | 9.20 |
+|         2 | Bob     |   23 |            2 | 8.50 |
+|         3 | Charlie |   21 |            3 | 7.80 |
+|         4 | David   |   24 |            1 | 8.90 |
+|         5 | Eve     |   22 |            2 | 9.00 |
++-----------+---------+------+--------------+------+
+5 rows in set (0.00 sec)
+
+mysql> -- Find students who have never enrolled in any course
+mysql> SELECT * FROM Students
+    -> WHERE CGPA > (SELECT AVG(CGPA) FROM Students);
++-----------+-------+------+--------------+------+
+| StudentID | Name  | Age  | DepartmentID | CGPA |
++-----------+-------+------+--------------+------+
+|         1 | Alice |   22 |            1 | 9.20 |
+|         4 | David |   24 |            1 | 8.90 |
+|         5 | Eve   |   22 |            2 | 9.00 |
++-----------+-------+------+--------------+------+
+3 rows in set (0.00 sec)
+
+mysql> SELECT * FROM Students
+    -> WHERE StudentID NOT IN (SELECT DISTINCT StudentID FROM Enrollments);
+Empty set (0.00 sec)
+
+mysql> select *from Enrollments;
++--------------+-----------+----------+-------+
+| EnrollmentID | StudentID | CourseID | Marks |
++--------------+-----------+----------+-------+
+|            1 |         1 | CSE101   |    90 |
+|            2 |         1 | CSE102   |    95 |
+|            3 |         2 | ECE101   |    75 |
+|            4 |         2 | ECE102   |    80 |
+|            5 |         3 | ME101    |    85 |
+|            6 |         4 | CSE101   |    88 |
+|            7 |         4 | CSE102   |    92 |
+|            8 |         5 | ECE101   |    70 |
+|            9 |         5 | ECE102   |    65 |
++--------------+-----------+----------+-------+
+9 rows in set (0.00 sec)
+
+mysql> -- Get courses that have no students enrolled
+mysql> -- Get students enrolled in courses offered by the 'Computer Sci' department
+mysql> select *from Enrollments
+    -> ;
++--------------+-----------+----------+-------+
+| EnrollmentID | StudentID | CourseID | Marks |
++--------------+-----------+----------+-------+
+|            1 |         1 | CSE101   |    90 |
+|            2 |         1 | CSE102   |    95 |
+|            3 |         2 | ECE101   |    75 |
+|            4 |         2 | ECE102   |    80 |
+|            5 |         3 | ME101    |    85 |
+|            6 |         4 | CSE101   |    88 |
+|            7 |         4 | CSE102   |    92 |
+|            8 |         5 | ECE101   |    70 |
+|            9 |         5 | ECE102   |    65 |
++--------------+-----------+----------+-------+
+9 rows in set (0.00 sec)
+
+mysql> select *from Courses;
++----------+----------------------------------------+--------------+
+| CourseID | CourseName                             | DepartmentID |
++----------+----------------------------------------+--------------+
+| CSE101   | Introduction to Computer Science       |            1 |
+| CSE102   | Data Structures and Algorithms         |            1 |
+| ECE101   | Basic Electrical Engineering           |            2 |
+| ECE102   | Circuit Analysis                       |            2 |
+| ME101    | Introduction to Mechanical Engineering |            3 |
++----------+----------------------------------------+--------------+
+5 rows in set (0.00 sec)
+
+mysql> select *from Departments;
++--------------+--------------+-------------+
+| DepartmentID | DeptName     | HOD         |
++--------------+--------------+-------------+
+|            1 | Computer Sci | Dr. Smith   |
+|            2 | Electrical   | Dr. Johnson |
+|            3 | Mechanical   | Dr. Brown   |
++--------------+--------------+-------------+
+3 rows in set (0.00 sec)
+
+mysql> select distinct s.*
+    -> from Students s
+    -> join Enrollments e on e.StudentID = s.StudentID
+    -> join Courses c on c.CourseID = e.CourseID
+    -> join Departments d on d.DepartmentID = c.DepartmentID
+    -> where d.DeptName = "Computer Sci";
++-----------+-------+------+--------------+------+
+| StudentID | Name  | Age  | DepartmentID | CGPA |
++-----------+-------+------+--------------+------+
+|         1 | Alice |   22 |            1 | 9.20 |
+|         4 | David |   24 |            1 | 8.90 |
++-----------+-------+------+--------------+------+
+2 rows in set (0.00 sec)
+
+mysql> -- Find students who have the same age as the oldest student
+mysql> select *from Students
+    -> where age = (select max(age) from Students);
++-----------+-------+------+--------------+------+
+| StudentID | Name  | Age  | DepartmentID | CGPA |
++-----------+-------+------+--------------+------+
+|         4 | David |   24 |            1 | 8.90 |
++-----------+-------+------+--------------+------+
+1 row in set (0.00 sec)
+
+mysql> -- Retrieve courses where at least one student scored more than 85 marks
+mysql> select *from Enrollments;
++--------------+-----------+----------+-------+
+| EnrollmentID | StudentID | CourseID | Marks |
++--------------+-----------+----------+-------+
+|            1 |         1 | CSE101   |    90 |
+|            2 |         1 | CSE102   |    95 |
+|            3 |         2 | ECE101   |    75 |
+|            4 |         2 | ECE102   |    80 |
+|            5 |         3 | ME101    |    85 |
+|            6 |         4 | CSE101   |    88 |
+|            7 |         4 | CSE102   |    92 |
+|            8 |         5 | ECE101   |    70 |
+|            9 |         5 | ECE102   |    65 |
++--------------+-----------+----------+-------+
+9 rows in set (0.00 sec)
+
+mysql> select *from Courses;
++----------+----------------------------------------+--------------+
+| CourseID | CourseName                             | DepartmentID |
++----------+----------------------------------------+--------------+
+| CSE101   | Introduction to Computer Science       |            1 |
+| CSE102   | Data Structures and Algorithms         |            1 |
+| ECE101   | Basic Electrical Engineering           |            2 |
+| ECE102   | Circuit Analysis                       |            2 |
+| ME101    | Introduction to Mechanical Engineering |            3 |
++----------+----------------------------------------+--------------+
+5 rows in set (0.00 sec)
+
+mysql> select c.* from
+    -> Courses c
+    -> join Enrollments e on e.CourseID = e.CourseID
+    -> where e.marks > 85;
++----------+----------------------------------------+--------------+
+| CourseID | CourseName                             | DepartmentID |
++----------+----------------------------------------+--------------+
+| CSE101   | Introduction to Computer Science       |            1 |
+| CSE101   | Introduction to Computer Science       |            1 |
+| CSE101   | Introduction to Computer Science       |            1 |
+| CSE101   | Introduction to Computer Science       |            1 |
+| CSE102   | Data Structures and Algorithms         |            1 |
+| CSE102   | Data Structures and Algorithms         |            1 |
+| CSE102   | Data Structures and Algorithms         |            1 |
+| CSE102   | Data Structures and Algorithms         |            1 |
+| ECE101   | Basic Electrical Engineering           |            2 |
+| ECE101   | Basic Electrical Engineering           |            2 |
+| ECE101   | Basic Electrical Engineering           |            2 |
+| ECE101   | Basic Electrical Engineering           |            2 |
+| ECE102   | Circuit Analysis                       |            2 |
+| ECE102   | Circuit Analysis                       |            2 |
+| ECE102   | Circuit Analysis                       |            2 |
+| ECE102   | Circuit Analysis                       |            2 |
+| ME101    | Introduction to Mechanical Engineering |            3 |
+| ME101    | Introduction to Mechanical Engineering |            3 |
+| ME101    | Introduction to Mechanical Engineering |            3 |
+| ME101    | Introduction to Mechanical Engineering |            3 |
++----------+----------------------------------------+--------------+
+20 rows in set (0.00 sec)
+
+mysql> select c.* from
+    -> Courses c
+    -> join Enrollments e on e.CourseID = e.CourseID
+    -> where e.marks > 85
+    -> group by DepartmentID;
+ERROR 1055 (42000): Expression #1 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'ass7.c.CourseID' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
+mysql> -- Find the highest CGPA in each department
+mysql> select DepartmentID, max(CGPA) as maxi
+    -> from students
+    -> group by DepartmentID;
++--------------+------+
+| DepartmentID | maxi |
++--------------+------+
+|            1 | 9.20 |
+|            2 | 9.00 |
+|            3 | 7.80 |
++--------------+------+
+3 rows in set (0.00 sec)
+
+mysql> -- Get students who have enrolled in more than one course
+mysql> select *from Courses;
++----------+----------------------------------------+--------------+
+| CourseID | CourseName                             | DepartmentID |
++----------+----------------------------------------+--------------+
+| CSE101   | Introduction to Computer Science       |            1 |
+| CSE102   | Data Structures and Algorithms         |            1 |
+| ECE101   | Basic Electrical Engineering           |            2 |
+| ECE102   | Circuit Analysis                       |            2 |
+| ME101    | Introduction to Mechanical Engineering |            3 |
++----------+----------------------------------------+--------------+
+5 rows in set (0.00 sec)
+
+mysql> select *from Enrollments;
++--------------+-----------+----------+-------+
+| EnrollmentID | StudentID | CourseID | Marks |
++--------------+-----------+----------+-------+
+|            1 |         1 | CSE101   |    90 |
+|            2 |         1 | CSE102   |    95 |
+|            3 |         2 | ECE101   |    75 |
+|            4 |         2 | ECE102   |    80 |
+|            5 |         3 | ME101    |    85 |
+|            6 |         4 | CSE101   |    88 |
+|            7 |         4 | CSE102   |    92 |
+|            8 |         5 | ECE101   |    70 |
+|            9 |         5 | ECE102   |    65 |
++--------------+-----------+----------+-------+
+9 rows in set (0.00 sec)
+
+mysql> select StudentID
+    -> from Enrollments
+    -> group by StudentID
+    -> where count(CourseID) > 1;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'where count(CourseID) > 1' at line 4
+mysql> select SudentID
+    -> from Enrollments
+    -> group by StudentID
+    -> having count(CourseID)>1;
+ERROR 1054 (42S22): Unknown column 'SudentID' in 'field list'
+mysql> select StudentID
+    -> from Enrollments
+    -> group by StudentID
+    -> having count(CourseID)>1;
++-----------+
+| StudentID |
++-----------+
+|         1 |
+|         2 |
+|         4 |
+|         5 |
++-----------+
+4 rows in set (0.00 sec)
+
+mysql> -- Get the department with the most students enrolled
+mysql> select *from Students;
++-----------+---------+------+--------------+------+
+| StudentID | Name    | Age  | DepartmentID | CGPA |
++-----------+---------+------+--------------+------+
+|         1 | Alice   |   22 |            1 | 9.20 |
+|         2 | Bob     |   23 |            2 | 8.50 |
+|         3 | Charlie |   21 |            3 | 7.80 |
+|         4 | David   |   24 |            1 | 8.90 |
+|         5 | Eve     |   22 |            2 | 9.00 |
++-----------+---------+------+--------------+------+
+5 rows in set (0.00 sec)
+
+mysql> select *from Departments;
++--------------+--------------+-------------+
+| DepartmentID | DeptName     | HOD         |
++--------------+--------------+-------------+
+|            1 | Computer Sci | Dr. Smith   |
+|            2 | Electrical   | Dr. Johnson |
+|            3 | Mechanical   | Dr. Brown   |
++--------------+--------------+-------------+
+3 rows in set (0.00 sec)
+
+mysql> select DeptName
+    -> from Departments d
+    -> join Students s on s.DepartmentID = d.DepartmentID
+    -> group by DepartmentID
+    -> order by count(s.StudentID) desc limit 1;
+ERROR 1052 (23000): Column 'DepartmentID' in group statement is ambiguous
+mysql> SELECT D.DepartmentID, D.DeptName FROM Departments D
+    -> JOIN Students S ON D.DepartmentID = S.DepartmentID
+    -> GROUP BY D.DepartmentID
+    -> ORDER BY COUNT(S.StudentID) DESC
+    -> LIMIT 1;
++--------------+--------------+
+| DepartmentID | DeptName     |
++--------------+--------------+
+|            1 | Computer Sci |
++--------------+--------------+
+1 row in set (0.00 sec)
+
+mysql> -- Find students who are not enrolled in any course
+mysql> select *from Courses;
++----------+----------------------------------------+--------------+
+| CourseID | CourseName                             | DepartmentID |
++----------+----------------------------------------+--------------+
+| CSE101   | Introduction to Computer Science       |            1 |
+| CSE102   | Data Structures and Algorithms         |            1 |
+| ECE101   | Basic Electrical Engineering           |            2 |
+| ECE102   | Circuit Analysis                       |            2 |
+| ME101    | Introduction to Mechanical Engineering |            3 |
++----------+----------------------------------------+--------------+
+5 rows in set (0.00 sec)
+
+mysql> select *from Students
+    -> where StudentID not in (select StudentID from Courses);
+Empty set (0.00 sec)
+
+mysql> -- Retrieve students who scored below the average marks in their courses
+mysql> select s.*
+    -> from Students s
+    -> join Enrollments e on e.StudentID = s.StudentID
+    -> where e.Marks < (select avg(Marks) from Enrollments where CourseID = e.CourseID);
++-----------+-------+------+--------------+------+
+| StudentID | Name  | Age  | DepartmentID | CGPA |
++-----------+-------+------+--------------+------+
+|         4 | David |   24 |            1 | 8.90 |
+|         4 | David |   24 |            1 | 8.90 |
+|         5 | Eve   |   22 |            2 | 9.00 |
+|         5 | Eve   |   22 |            2 | 9.00 |
++-----------+-------+------+--------------+------+
+4 rows in set (0.00 sec)
+
+mysql> -- Find the department where the highest CGPA student belongs
+mysql> select d.*
+    -> from Departments d
+    -> join Students s on s.DepartmentID = d.DepartmentId
+    -> where s.CGPA = (select max(CGPA) from Students);
++--------------+--------------+-----------+
+| DepartmentID | DeptName     | HOD       |
++--------------+--------------+-----------+
+|            1 | Computer Sci | Dr. Smith |
++--------------+--------------+-----------+
+1 row in set (0.00 sec)
+
+mysql> -- Find the department with the highest number of students enrolled
+mysql> SELECT D.DepartmentID, D.DeptName FROM Departments D
+    -> JOIN Students S ON D.DepartmentID = S.DepartmentID
+    -> GROUP BY D.DepartmentID
+    -> ORDER BY COUNT(S.StudentID) DESC
+    -> LIMIT 1;
++--------------+--------------+
+| DepartmentID | DeptName     |
++--------------+--------------+
+|            1 | Computer Sci |
++--------------+--------------+
+1 row in set (0.00 sec)
+
+mysql> -- Get courses where the lowest score is higher than 70
+mysql> SELECT C.* FROM Courses C
+    -> WHERE 70 < (SELECT MIN(Marks) FROM Enrollments WHERE CourseID = C.CourseID);
++----------+----------------------------------------+--------------+
+| CourseID | CourseName                             | DepartmentID |
++----------+----------------------------------------+--------------+
+| CSE101   | Introduction to Computer Science       |            1 |
+| CSE102   | Data Structures and Algorithms         |            1 |
+| ME101    | Introduction to Mechanical Engineering |            3 |
++----------+----------------------------------------+--------------+
+3 rows in set (0.00 sec)
+
+mysql> -- Retrieve students who have the same CGPA as 'Alice'
+mysql> SELECT * FROM Students
+    -> WHERE CGPA = (SELECT CGPA FROM Students WHERE Name = 'Alice');
++-----------+-------+------+--------------+------+
+| StudentID | Name  | Age  | DepartmentID | CGPA |
++-----------+-------+------+--------------+------+
+|         1 | Alice |   22 |            1 | 9.20 |
++-----------+-------+------+--------------+------+
+1 row in set (0.00 sec)
+
+mysql> -- Get the course where the maximum number of students have enrolled
+mysql> SELECT C.* FROM Courses C
+    -> JOIN Enrollments E ON C.CourseID = E.CourseID
+    -> GROUP BY C.CourseID
+    -> ORDER BY COUNT(E.StudentID) DESC
+    -> LIMIT 1;
++----------+----------------------------------+--------------+
+| CourseID | CourseName                       | DepartmentID |
++----------+----------------------------------+--------------+
+| CSE101   | Introduction to Computer Science |            1 |
++----------+----------------------------------+--------------+
+1 row in set (0.00 sec)
+
+mysql> -- Find students who are enrolled in more than two courses
+mysql> SELECT S.* FROM Students S
+    -> JOIN Enrollments E ON S.StudentID = E.StudentID
+    -> WHERE E.Marks = (SELECT MAX(Marks) FROM Enrollments WHERE CourseID = E.CourseID);
++-----------+---------+------+--------------+------+
+| StudentID | Name    | Age  | DepartmentID | CGPA |
++-----------+---------+------+--------------+------+
+|         1 | Alice   |   22 |            1 | 9.20 |
+|         1 | Alice   |   22 |            1 | 9.20 |
+|         2 | Bob     |   23 |            2 | 8.50 |
+|         2 | Bob     |   23 |            2 | 8.50 |
+|         3 | Charlie |   21 |            3 | 7.80 |
++-----------+---------+------+--------------+------+
+5 rows in set (0.00 sec)
+
+mysql> --  Get the department with the lowest average CGPA
+mysql> SELECT D.DepartmentID, D.DeptName FROM Departments D
+    -> JOIN Students S ON D.DepartmentID = S.DepartmentID
+    -> GROUP BY D.DepartmentID
+    -> ORDER BY AVG(S.CGPA) ASC
+    -> LIMIT 1;
++--------------+------------+
+| DepartmentID | DeptName   |
++--------------+------------+
+|            3 | Mechanical |
++--------------+------------+
+1 row in set (0.00 sec)
+
+mysql> -- Find the course in which the maximum number of students have failed (Marks < 40)
+mysql> SELECT C.* FROM Courses C
+    -> JOIN Enrollments E ON C.CourseID = E.CourseID
+    -> WHERE E.Marks < 40
+    -> GROUP BY C.CourseID
+    -> ORDER BY COUNT(E.StudentID) DESC
+    -> LIMIT 1;
+Empty set (0.00 sec)
+
+mysql>

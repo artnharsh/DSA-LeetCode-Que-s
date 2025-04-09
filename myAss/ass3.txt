@@ -1,0 +1,201 @@
+
+C:\Users\patil>mysql -u root -p
+Enter password: *******
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 9
+Server version: 8.0.41 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> create database ass3;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use ass3;
+Database changed
+mysql> CREATE TABLE Courses (
+    ->     CourseID INT PRIMARY KEY NOT NULL,
+    ->     CourseName VARCHAR(100) NOT NULL UNIQUE,
+    ->     Credits INT DEFAULT 3
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> CREATE TABLE Students (
+    ->     StudentID INT PRIMARY KEY NOT NULL,
+    ->     FirstName VARCHAR(50) NOT NULL,
+    ->     LastName VARCHAR(50),
+    ->     Email VARCHAR(100) UNIQUE,
+    ->     DOB DATE NOT NULL,
+    ->     CourseID INT,
+    ->     FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> INSERT INTO Students (StudentID, FirstName, LastName, Email, DOB, CourseID)
+    -> VALUES
+    ->     (1, 'Harshal', 'Patil', 'harshal@gmail.com', '2002-05-10', 101),
+    ->     (2, 'Piyush', 'Patil', 'piyush@gmail.com', '2001-08-20', 102),
+    ->     (3, 'Ayush', 'Patil', 'ayush@gmail.com', '2003-02-15', 101),
+    ->     (4, 'Rushikesh', 'Patil', 'rushikesh@gmail.com', '2000-12-01', 102);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`ass3`.`students`, CONSTRAINT `students_ibfk_1` FOREIGN KEY (`CourseID`) REFERENCES `courses` (`CourseID`))
+mysql> INSERT INTO Courses (CourseID, CourseName, Credits)
+    -> VALUES (101, 'Computer Science', 4),
+    ->        (102, 'Mathematics', 3);
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Students (StudentID, FirstName, LastName, Email, DOB, CourseID)
+    -> VALUES
+    ->     (1, 'Harshal', 'Patil', 'harshal@gmail.com', '2002-05-10', 101),
+    ->     (2, 'Piyush', 'Patil', 'piyush@gmail.com', '2001-08-20', 102),
+    ->     (3, 'Ayush', 'Patil', 'ayush@gmail.com', '2003-02-15', 101),
+    ->     (4, 'Rushikesh', 'Patil', 'rushikesh@gmail.com', '2000-12-01', 102);
+Query OK, 4 rows affected (0.01 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> select *from Students;
++-----------+-----------+----------+---------------------+------------+----------+
+| StudentID | FirstName | LastName | Email               | DOB        | CourseID |
++-----------+-----------+----------+---------------------+------------+----------+
+|         1 | Harshal   | Patil    | harshal@gmail.com   | 2002-05-10 |      101 |
+|         2 | Piyush    | Patil    | piyush@gmail.com    | 2001-08-20 |      102 |
+|         3 | Ayush     | Patil    | ayush@gmail.com     | 2003-02-15 |      101 |
+|         4 | Rushikesh | Patil    | rushikesh@gmail.com | 2000-12-01 |      102 |
++-----------+-----------+----------+---------------------+------------+----------+
+4 rows in set (0.00 sec)
+
+mysql> select *from Courses;
++----------+------------------+---------+
+| CourseID | CourseName       | Credits |
++----------+------------------+---------+
+|      101 | Computer Science |       4 |
+|      102 | Mathematics      |       3 |
++----------+------------------+---------+
+2 rows in set (0.00 sec)
+
+mysql> select FirstName, LastName
+    -> from Students
+    -> where DOB > 2000-01-01
+    -> ;
++-----------+----------+
+| FirstName | LastName |
++-----------+----------+
+| Harshal   | Patil    |
+| Piyush    | Patil    |
+| Ayush     | Patil    |
+| Rushikesh | Patil    |
++-----------+----------+
+4 rows in set, 1 warning (0.00 sec)
+
+mysql> update Students
+    -> set DOB = 1999-12-01
+    -> where FirstName = "Rushikesh";
+ERROR 1292 (22007): Incorrect date value: '1986' for column 'DOB' at row 4
+mysql> update Students
+    -> set DOB = "1999-12-01"
+    -> where FirstName = "Rushikesh";
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select *from Students;
++-----------+-----------+----------+---------------------+------------+----------+
+| StudentID | FirstName | LastName | Email               | DOB        | CourseID |
++-----------+-----------+----------+---------------------+------------+----------+
+|         1 | Harshal   | Patil    | harshal@gmail.com   | 2002-05-10 |      101 |
+|         2 | Piyush    | Patil    | piyush@gmail.com    | 2001-08-20 |      102 |
+|         3 | Ayush     | Patil    | ayush@gmail.com     | 2003-02-15 |      101 |
+|         4 | Rushikesh | Patil    | rushikesh@gmail.com | 1999-12-01 |      102 |
++-----------+-----------+----------+---------------------+------------+----------+
+4 rows in set (0.00 sec)
+
+mysql> update Students
+    -> ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1
+mysql> select FirstName, LastName
+    -> from students
+    -> where DOB > "2000-01-01";
++-----------+----------+
+| FirstName | LastName |
++-----------+----------+
+| Harshal   | Patil    |
+| Piyush    | Patil    |
+| Ayush     | Patil    |
++-----------+----------+
+3 rows in set (0.00 sec)
+
+mysql> update Courses
+    -> set Credits = 5
+    -> where CourseName = "Computer Science";
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select *from Courses;
++----------+------------------+---------+
+| CourseID | CourseName       | Credits |
++----------+------------------+---------+
+|      101 | Computer Science |       5 |
+|      102 | Mathematics      |       3 |
++----------+------------------+---------+
+2 rows in set (0.00 sec)
+
+mysql> delete from Students
+    -> where email = "rushikesh@gmail.com";
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select *from Students;
++-----------+-----------+----------+-------------------+------------+----------+
+| StudentID | FirstName | LastName | Email             | DOB        | CourseID |
++-----------+-----------+----------+-------------------+------------+----------+
+|         1 | Harshal   | Patil    | harshal@gmail.com | 2002-05-10 |      101 |
+|         2 | Piyush    | Patil    | piyush@gmail.com  | 2001-08-20 |      102 |
+|         3 | Ayush     | Patil    | ayush@gmail.com   | 2003-02-15 |      101 |
++-----------+-----------+----------+-------------------+------------+----------+
+3 rows in set (0.00 sec)
+
+mysql> insert into Students
+    -> values(4,"Rushikesh","Patil","rushikesh@gmail.com","2005-03-15",NULL);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select *from Students;
++-----------+-----------+----------+---------------------+------------+----------+
+| StudentID | FirstName | LastName | Email               | DOB        | CourseID |
++-----------+-----------+----------+---------------------+------------+----------+
+|         1 | Harshal   | Patil    | harshal@gmail.com   | 2002-05-10 |      101 |
+|         2 | Piyush    | Patil    | piyush@gmail.com    | 2001-08-20 |      102 |
+|         3 | Ayush     | Patil    | ayush@gmail.com     | 2003-02-15 |      101 |
+|         4 | Rushikesh | Patil    | rushikesh@gmail.com | 2005-03-15 |     NULL |
++-----------+-----------+----------+---------------------+------------+----------+
+4 rows in set (0.00 sec)
+
+mysql> select FirstName
+    -> from Students
+    -> where CourseID = NULL;
+Empty set (0.00 sec)
+
+mysql> select FirstName
+    -> from Students
+    -> where CourseID = "NULL";
+Empty set, 1 warning (0.00 sec)
+
+mysql> select firstName
+    -> from Students
+    -> where CourseID is NULL;
++-----------+
+| firstName |
++-----------+
+| Rushikesh |
++-----------+
+1 row in set (0.00 sec)
+
+mysql> INSERT INTO Students (StudentID, FirstName, LastName, Email, DOB, CourseID)
+    -> VALUES (5, 'Harshal', 'Patil', 'harshal@gmail.com', '2002-05-10', 101);
+ERROR 1062 (23000): Duplicate entry 'harshal@gmail.com' for key 'students.Email'
+mysql> INSERT INTO Students (StudentID, FirstName, LastName, Email, DOB, CourseID)
+    -> VALUES (6, 'Piyush', 'Patil', 'piyush2@gmail.com', '2001-08-20', 999);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`ass3`.`students`, CONSTRAINT `students_ibfk_1` FOREIGN KEY (`CourseID`) REFERENCES `courses` (`CourseID`))
+mysql>

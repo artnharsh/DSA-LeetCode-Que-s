@@ -1,0 +1,595 @@
+C:\Users\patil>mysql -u root -p
+Enter password: *******
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 13
+Server version: 8.0.41 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> create ass6;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ass6' at line 1
+mysql> create database ass6;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use ass6;
+Database changed
+mysql> CREATE TABLE Customers (
+    ->     customer_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     name VARCHAR(100),
+    ->     email VARCHAR(100) UNIQUE,
+    ->     city VARCHAR(50)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> CREATE TABLE Orders (
+    ->     order_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     customer_id INT,
+    ->     order_date DATE,
+    ->     total_amount DECIMAL(10,2),
+    ->     FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> CREATE TABLE Products (
+    ->     product_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     product_name VARCHAR(100),
+    ->     category VARCHAR(50),
+    ->     price DECIMAL(10,2)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> CREATE TABLE Order_Items (
+    ->     order_item_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     order_id INT,
+    ->     product_id INT,
+    ->     quantity INT,
+    ->     subtotal DECIMAL(10,2),
+    ->     FOREIGN KEY (order_id) REFERENCES Orders(order_id),
+    ->     FOREIGN KEY (product_id) REFERENCES Products(product_id)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> CREATE TABLE Sellers (
+    ->     seller_id INT PRIMARY KEY AUTO_INCREMENT,
+    ->     seller_name VARCHAR(100),
+    ->     city VARCHAR(50)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> CREATE TABLE Product_Sellers (
+    ->     seller_id INT,
+    ->     product_id INT,
+    ->     PRIMARY KEY (seller_id, product_id),
+    ->     FOREIGN KEY (seller_id) REFERENCES Sellers(seller_id),
+    ->     FOREIGN KEY (product_id) REFERENCES Products(product_id)
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> INSERT INTO Customers (name, email, city) VALUES
+    -> ('Harshal Pravin Patil', 'harshal@gmail.com', 'Pune'),
+    -> ('Piyush Rajkumar Patil', 'piyush@gmail.com', 'Mumbai'),
+    -> ('Ayush Raju Patil', 'ayush@gmail.com', 'Delhi'),
+    -> ('Rushikesh Gajanan Patil', 'rushikesh@gmail.com', 'Bangalore'),
+    -> ('Aniket Sharma', 'aniket@gmail.com', 'Pune');
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Sellers (seller_name, city) VALUES
+    -> ('TechBazaar', 'Mumbai'),
+    -> ('GadgetWorld', 'Pune'),
+    -> ('DigitalHub', 'Delhi');
+Query OK, 3 rows affected (0.01 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Products (product_name, category, price) VALUES
+    -> ('Laptop', 'Electronics', 55000.00),
+    -> ('Smartphone', 'Electronics', 30000.00),
+    -> ('Headphones', 'Accessories', 2000.00),
+    -> ('Mouse', 'Accessories', 500.00),
+    -> ('Keyboard', 'Accessories', 1500.00);
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Product_Sellers (seller_id, product_id) VALUES
+    -> (1, 1), (1, 2),  -- TechBazaar sells Laptop, Smartphone
+    -> (2, 3), (2, 4),  -- GadgetWorld sells Headphones, Mouse
+    -> (3, 5), (3, 1);
+Query OK, 6 rows affected (0.01 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Orders (customer_id, order_date, total_amount) VALUES
+    -> (1, '2024-03-10', 57000.00),
+    -> (2, '2024-03-12', 30000.00),
+    -> (3, '2024-03-15', 500.00),
+    -> (1, '2024-03-18', 2000.00),
+    -> (4, '2024-03-20', 55000.00);
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO Order_Items (order_id, product_id, quantity, subtotal) VALUES
+    -> (1, 1, 1, 55000.00),
+    -> (1, 3, 1, 2000.00),
+    -> (2, 2, 1, 30000.00),
+    -> (3, 4, 1, 500.00),
+    -> (4, 3, 1, 2000.00),
+    -> (5, 1, 1, 55000.00);
+Query OK, 6 rows affected (0.01 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+mysql> -- Retrieve all customers along with their corresponding orders (including customers who haven't ordered).
+mysql> SELECT c.customer_id, c.name, c.email, c.city, o.order_id, o.order_date, o.total_amount
+    -> FROM Customers c
+    -> LEFT JOIN Orders o ON c.customer_id = o.customer_id;
++-------------+-------------------------+---------------------+-----------+----------+------------+--------------+
+| customer_id | name                    | email               | city      | order_id | order_date | total_amount |
++-------------+-------------------------+---------------------+-----------+----------+------------+--------------+
+|           1 | Harshal Pravin Patil    | harshal@gmail.com   | Pune      |        1 | 2024-03-10 |     57000.00 |
+|           1 | Harshal Pravin Patil    | harshal@gmail.com   | Pune      |        4 | 2024-03-18 |      2000.00 |
+|           2 | Piyush Rajkumar Patil   | piyush@gmail.com    | Mumbai    |        2 | 2024-03-12 |     30000.00 |
+|           3 | Ayush Raju Patil        | ayush@gmail.com     | Delhi     |        3 | 2024-03-15 |       500.00 |
+|           4 | Rushikesh Gajanan Patil | rushikesh@gmail.com | Bangalore |        5 | 2024-03-20 |     55000.00 |
+|           5 | Aniket Sharma           | aniket@gmail.com    | Pune      |     NULL | NULL       |         NULL |
++-------------+-------------------------+---------------------+-----------+----------+------------+--------------+
+6 rows in set (0.00 sec)
+
+mysql> select *from Products;
++------------+--------------+-------------+----------+
+| product_id | product_name | category    | price    |
++------------+--------------+-------------+----------+
+|          1 | Laptop       | Electronics | 55000.00 |
+|          2 | Smartphone   | Electronics | 30000.00 |
+|          3 | Headphones   | Accessories |  2000.00 |
+|          4 | Mouse        | Accessories |   500.00 |
+|          5 | Keyboard     | Accessories |  1500.00 |
++------------+--------------+-------------+----------+
+5 rows in set (0.00 sec)
+
+mysql> select *from Orders;
++----------+-------------+------------+--------------+
+| order_id | customer_id | order_date | total_amount |
++----------+-------------+------------+--------------+
+|        1 |           1 | 2024-03-10 |     57000.00 |
+|        2 |           2 | 2024-03-12 |     30000.00 |
+|        3 |           3 | 2024-03-15 |       500.00 |
+|        4 |           1 | 2024-03-18 |      2000.00 |
+|        5 |           4 | 2024-03-20 |     55000.00 |
++----------+-------------+------------+--------------+
+5 rows in set (0.00 sec)
+
+mysql> select *from Order_Items;
++---------------+----------+------------+----------+----------+
+| order_item_id | order_id | product_id | quantity | subtotal |
++---------------+----------+------------+----------+----------+
+|             1 |        1 |          1 |        1 | 55000.00 |
+|             2 |        1 |          3 |        1 |  2000.00 |
+|             3 |        2 |          2 |        1 | 30000.00 |
+|             4 |        3 |          4 |        1 |   500.00 |
+|             5 |        4 |          3 |        1 |  2000.00 |
+|             6 |        5 |          1 |        1 | 55000.00 |
++---------------+----------+------------+----------+----------+
+6 rows in set (0.00 sec)
+
+mysql> SELECT o.order_id, p.product_name, oi.quantity
+    -> FROM Order_Items oi
+    -> JOIN Products p ON oi.product_id = p.product_id
+    -> JOIN Orders o ON oi.order_id = o.order_id;
++----------+--------------+----------+
+| order_id | product_name | quantity |
++----------+--------------+----------+
+|        1 | Laptop       |        1 |
+|        5 | Laptop       |        1 |
+|        2 | Smartphone   |        1 |
+|        1 | Headphones   |        1 |
+|        4 | Headphones   |        1 |
+|        3 | Mouse        |        1 |
++----------+--------------+----------+
+6 rows in set (0.00 sec)
+
+mysql> -- Find the total number of orders placed by each customer
+mysql> SELECT c.customer_id, c.name, COUNT(o.order_id) AS total_orders
+    -> FROM Customers c
+    -> LEFT JOIN Orders o ON c.customer_id = o.customer_id
+    -> GROUP BY c.customer_id, c.name;
++-------------+-------------------------+--------------+
+| customer_id | name                    | total_orders |
++-------------+-------------------------+--------------+
+|           1 | Harshal Pravin Patil    |            2 |
+|           2 | Piyush Rajkumar Patil   |            1 |
+|           3 | Ayush Raju Patil        |            1 |
+|           4 | Rushikesh Gajanan Patil |            1 |
+|           5 | Aniket Sharma           |            0 |
++-------------+-------------------------+--------------+
+5 rows in set (0.00 sec)
+
+mysql> -- Find the total number of products available in each category
+mysql> SELECT category, COUNT(product_id) AS total_products
+    -> FROM Products
+    -> GROUP BY category;
++-------------+----------------+
+| category    | total_products |
++-------------+----------------+
+| Electronics |              2 |
+| Accessories |              3 |
++-------------+----------------+
+2 rows in set (0.00 sec)
+
+mysql> -- Retrieve the order details, including customer name and total amount, for all orders placed in the last 30 day
+mysql> SELECT o.order_id, c.name, o.total_amount
+    -> FROM Orders o
+    -> JOIN Customers c ON o.customer_id = c.customer_id
+    -> WHERE o.order_date >= CURDATE() - INTERVAL 30 DAY;
+Empty set (0.00 sec)
+
+mysql> -- Retrieve the names of sellers who sell a specific product (e.g., "Laptop")
+mysql> select *from Seller;
+ERROR 1146 (42S02): Table 'ass6.seller' doesn't exist
+mysql> select *from Sellers;
++-----------+-------------+--------+
+| seller_id | seller_name | city   |
++-----------+-------------+--------+
+|         1 | TechBazaar  | Mumbai |
+|         2 | GadgetWorld | Pune   |
+|         3 | DigitalHub  | Delhi  |
++-----------+-------------+--------+
+3 rows in set (0.00 sec)
+
+mysql> select *from Product_Sellers
+    -> ;
++-----------+------------+
+| seller_id | product_id |
++-----------+------------+
+|         1 |          1 |
+|         3 |          1 |
+|         1 |          2 |
+|         2 |          3 |
+|         2 |          4 |
+|         3 |          5 |
++-----------+------------+
+6 rows in set (0.00 sec)
+
+mysql> select *from Products;
++------------+--------------+-------------+----------+
+| product_id | product_name | category    | price    |
++------------+--------------+-------------+----------+
+|          1 | Laptop       | Electronics | 55000.00 |
+|          2 | Smartphone   | Electronics | 30000.00 |
+|          3 | Headphones   | Accessories |  2000.00 |
+|          4 | Mouse        | Accessories |   500.00 |
+|          5 | Keyboard     | Accessories |  1500.00 |
++------------+--------------+-------------+----------+
+5 rows in set (0.00 sec)
+
+mysql> SELECT DISTINCT s.seller_name
+    -> FROM Sellers s
+    -> JOIN Product_Sellers ps ON s.seller_id = ps.seller_id
+    -> JOIN Products p ON ps.product_id = p.product_id
+    -> WHERE p.product_name = 'Laptop';
++-------------+
+| seller_name |
++-------------+
+| TechBazaar  |
+| DigitalHub  |
++-------------+
+2 rows in set (0.00 sec)
+
+mysql> -- Show all customers who have never placed an order
+mysql> -- we can do this using subquery too, but here we will use Left join where order_id is NULL
+mysql> SELECT c.customer_id, c.name
+    -> FROM Customers c
+    -> LEFT JOIN Orders o ON c.customer_id = o.customer_id
+    -> WHERE o.order_id IS NULL;
++-------------+---------------+
+| customer_id | name          |
++-------------+---------------+
+|           5 | Aniket Sharma |
++-------------+---------------+
+1 row in set (0.00 sec)
+
+mysql> -- Retrieve details of orders where the total amount is greater than the average order total
+mysql> SELECT order_id, customer_id, order_date, total_amount
+    -> FROM Orders
+    -> WHERE total_amount > (SELECT AVG(total_amount) FROM Orders);
++----------+-------------+------------+--------------+
+| order_id | customer_id | order_date | total_amount |
++----------+-------------+------------+--------------+
+|        1 |           1 | 2024-03-10 |     57000.00 |
+|        2 |           2 | 2024-03-12 |     30000.00 |
+|        5 |           4 | 2024-03-20 |     55000.00 |
++----------+-------------+------------+--------------+
+3 rows in set (0.00 sec)
+
+mysql> -- Find customers who have placed at least two orders
+mysql> -- group by with customer_id
+mysql> -- and also with name
+mysql> SELECT customer_id, name
+    -> FROM Customers c
+    -> JOIN Orders o ON c.customer_id = o.customer_id
+    -> GROUP BY c.customer_id, c.name
+    -> HAVING COUNT(o.order_id) >= 2;
+ERROR 1052 (23000): Column 'customer_id' in field list is ambiguous
+mysql> select customer_id, name
+    -> from Customer c
+    -> Join Orders o on c.customer_id = o.customer_id
+    -> group by c.customer_id
+    -> having count(o.order_id) >=2 ;
+ERROR 1146 (42S02): Table 'ass6.customer' doesn't exist
+mysql> select customer_id, name
+    -> FROM Customers c
+    -> JOIN Orders o ON c.customer_id = o.customer_id
+    -> GROUP BY c.customer_id, c.name
+    -> HAVING COUNT(o.order_id) >= 2;
+ERROR 1052 (23000): Column 'customer_id' in field list is ambiguous
+mysql> select name
+    -> from Customers c
+    -> join Orders o on o.customer_id = c.customer_id
+    -> group by c.name
+    -> having count(o.order_id) >= 2;
++----------------------+
+| name                 |
++----------------------+
+| Harshal Pravin Patil |
++----------------------+
+1 row in set (0.00 sec)
+
+mysql> -- Find the top 3 most ordered products based on quantity sold
+mysql> SELECT p.product_name, SUM(oi.quantity) AS total_quantity
+    -> FROM Order_Items oi
+    -> JOIN Products p ON oi.product_id = p.product_id
+    -> GROUP BY p.product_id, p.product_name
+    -> ORDER BY total_quantity DESC
+    -> LIMIT 3;
++--------------+----------------+
+| product_name | total_quantity |
++--------------+----------------+
+| Laptop       |              2 |
+| Headphones   |              2 |
+| Smartphone   |              1 |
++--------------+----------------+
+3 rows in set (0.00 sec)
+
+mysql> -- Display the product names that are sold by multiple sellers
+mysql> SELECT p.product_name
+    -> FROM Products p
+    -> JOIN Product_Sellers ps ON p.product_id = ps.product_id
+    -> GROUP BY p.product_id, p.product_name
+    -> HAVING COUNT(DISTINCT ps.seller_id) > 1;
++--------------+
+| product_name |
++--------------+
+| Laptop       |
++--------------+
+1 row in set (0.00 sec)
+
+mysql> -- Retrieve sellers who have never sold any product
+mysql> SELECT s.seller_id, s.seller_name
+    -> FROM Sellers s
+    -> LEFT JOIN Product_Sellers ps ON s.seller_id = ps.seller_id
+    -> WHERE ps.product_id IS NULL;
+Empty set (0.00 sec)
+
+mysql> -- Find all products that have never been ordered
+mysql> SELECT p.product_id, p.product_name
+    -> FROM Products p
+    -> LEFT JOIN Order_Items oi ON p.product_id = oi.product_id
+    -> WHERE oi.order_item_id IS NULL;
++------------+--------------+
+| product_id | product_name |
++------------+--------------+
+|          5 | Keyboard     |
++------------+--------------+
+1 row in set (0.00 sec)
+
+mysql> -- Retrieve the names of customers who have placed the highest number of orders
+mysql> select *from Orders;
++----------+-------------+------------+--------------+
+| order_id | customer_id | order_date | total_amount |
++----------+-------------+------------+--------------+
+|        1 |           1 | 2024-03-10 |     57000.00 |
+|        2 |           2 | 2024-03-12 |     30000.00 |
+|        3 |           3 | 2024-03-15 |       500.00 |
+|        4 |           1 | 2024-03-18 |      2000.00 |
+|        5 |           4 | 2024-03-20 |     55000.00 |
++----------+-------------+------------+--------------+
+5 rows in set (0.00 sec)
+
+mysql> select *from Customers;
++-------------+-------------------------+---------------------+-----------+
+| customer_id | name                    | email               | city      |
++-------------+-------------------------+---------------------+-----------+
+|           1 | Harshal Pravin Patil    | harshal@gmail.com   | Pune      |
+|           2 | Piyush Rajkumar Patil   | piyush@gmail.com    | Mumbai    |
+|           3 | Ayush Raju Patil        | ayush@gmail.com     | Delhi     |
+|           4 | Rushikesh Gajanan Patil | rushikesh@gmail.com | Bangalore |
+|           5 | Aniket Sharma           | aniket@gmail.com    | Pune      |
++-------------+-------------------------+---------------------+-----------+
+5 rows in set (0.00 sec)
+
+mysql> select name
+    -> from Customer c
+    -> join Orders o on o.customer_id = c.customer_id
+    -> group by customer_id
+    -> order by count(o.order_id)
+    -> desc limit 1;
+ERROR 1146 (42S02): Table 'ass6.customer' doesn't exist
+mysql> select customer_id, name
+    -> from Customers c
+    -> join Orders o on o.customer_id = c.customer_id
+    -> group by c.customer_id
+    -> order by count(o.order_id)
+    -> desc limit q;
+ERROR 1327 (42000): Undeclared variable: q
+mysql> SELECT c.name
+    -> FROM Customers c
+    -> JOIN Orders o ON c.customer_id = o.customer_id
+    -> GROUP BY c.customer_id, c.name
+    -> ORDER BY COUNT(o.order_id) DESC
+    -> LIMIT 1;
++----------------------+
+| name                 |
++----------------------+
+| Harshal Pravin Patil |
++----------------------+
+1 row in set (0.00 sec)
+
+mysql> -- Find all customers who have ordered more than 5 different products
+mysql> select *from Order_items;
++---------------+----------+------------+----------+----------+
+| order_item_id | order_id | product_id | quantity | subtotal |
++---------------+----------+------------+----------+----------+
+|             1 |        1 |          1 |        1 | 55000.00 |
+|             2 |        1 |          3 |        1 |  2000.00 |
+|             3 |        2 |          2 |        1 | 30000.00 |
+|             4 |        3 |          4 |        1 |   500.00 |
+|             5 |        4 |          3 |        1 |  2000.00 |
+|             6 |        5 |          1 |        1 | 55000.00 |
++---------------+----------+------------+----------+----------+
+6 rows in set (0.00 sec)
+
+mysql> select *from Customers;
++-------------+-------------------------+---------------------+-----------+
+| customer_id | name                    | email               | city      |
++-------------+-------------------------+---------------------+-----------+
+|           1 | Harshal Pravin Patil    | harshal@gmail.com   | Pune      |
+|           2 | Piyush Rajkumar Patil   | piyush@gmail.com    | Mumbai    |
+|           3 | Ayush Raju Patil        | ayush@gmail.com     | Delhi     |
+|           4 | Rushikesh Gajanan Patil | rushikesh@gmail.com | Bangalore |
+|           5 | Aniket Sharma           | aniket@gmail.com    | Pune      |
++-------------+-------------------------+---------------------+-----------+
+5 rows in set (0.00 sec)
+
+mysql> select *from Orders;
++----------+-------------+------------+--------------+
+| order_id | customer_id | order_date | total_amount |
++----------+-------------+------------+--------------+
+|        1 |           1 | 2024-03-10 |     57000.00 |
+|        2 |           2 | 2024-03-12 |     30000.00 |
+|        3 |           3 | 2024-03-15 |       500.00 |
+|        4 |           1 | 2024-03-18 |      2000.00 |
+|        5 |           4 | 2024-03-20 |     55000.00 |
++----------+-------------+------------+--------------+
+5 rows in set (0.00 sec)
+
+mysql> SELECT o.customer_id, c.name
+    -> FROM Orders o
+    -> JOIN Order_Items oi ON o.order_id = oi.order_id
+    -> JOIN Customers c ON o.customer_id = c.customer_id
+    -> GROUP BY o.customer_id, c.name
+    -> HAVING COUNT(DISTINCT oi.product_id) > 5;
+Empty set (0.00 sec)
+
+mysql> -- Find products that are sold by at least two different sellers but have never been ordered
+mysql> SELECT p.product_id, p.product_name
+    -> FROM Products p
+    -> JOIN Product_Sellers ps ON p.product_id = ps.product_id
+    -> GROUP BY p.product_id, p.product_name
+    -> HAVING COUNT(DISTINCT ps.seller_id) > 1
+    -> AND NOT EXISTS (SELECT 1 FROM Order_Items oi WHERE oi.product_id = p.product_id);
+Empty set (0.00 sec)
+
+mysql> -- Find the customer who has spent the most money overall
+mysql> SELECT c.customer_id, c.name, SUM(o.total_amount) AS total_spent
+    -> FROM Customers c
+    -> JOIN Orders o ON c.customer_id = o.customer_id
+    -> GROUP BY c.customer_id, c.name
+    -> ORDER BY total_spent DESC
+    -> LIMIT 1;
++-------------+----------------------+-------------+
+| customer_id | name                 | total_spent |
++-------------+----------------------+-------------+
+|           1 | Harshal Pravin Patil |    59000.00 |
++-------------+----------------------+-------------+
+1 row in set (0.00 sec)
+
+mysql> -- Find all customers who have either placed an order or live in the same city as a seller
+mysql> -- union clause use
+mysql> SELECT c.customer_id, c.name
+    -> FROM Customers c
+    -> WHERE c.customer_id IN (SELECT DISTINCT customer_id FROM Orders)
+    -> UNION
+    -> SELECT c.customer_id, c.name
+    -> FROM Customers c
+    -> JOIN Sellers s ON c.city = s.city;
++-------------+-------------------------+
+| customer_id | name                    |
++-------------+-------------------------+
+|           1 | Harshal Pravin Patil    |
+|           2 | Piyush Rajkumar Patil   |
+|           3 | Ayush Raju Patil        |
+|           4 | Rushikesh Gajanan Patil |
+|           5 | Aniket Sharma           |
++-------------+-------------------------+
+5 rows in set (0.00 sec)
+
+mysql> -- Retrieve all products that are either in stock with at least one seller or have been ordered at least once
+mysql> SELECT product_id, product_name FROM Products
+    -> WHERE product_id IN (SELECT DISTINCT product_id FROM Product_Sellers)
+    ->
+    -> union
+    ->
+    -> SELECT product_id, product_name FROM Products
+    -> WHERE product_id IN (SELECT DISTINCT product_id FROM Order_Items);
++------------+--------------+
+| product_id | product_name |
++------------+--------------+
+|          1 | Laptop       |
+|          2 | Smartphone   |
+|          3 | Headphones   |
+|          4 | Mouse        |
+|          5 | Keyboard     |
++------------+--------------+
+5 rows in set (0.00 sec)
+
+mysql> -- Retrieve products that have been both ordered and are currently in stock
+mysql> SELECT product_id, product_name FROM Products
+    -> WHERE product_id IN (SELECT DISTINCT product_id FROM Order_Items)
+    -> INTERSECT
+    -> SELECT product_id, product_name FROM Products
+    -> WHERE product_id IN (SELECT DISTINCT product_id FROM Product_Sellers);
++------------+--------------+
+| product_id | product_name |
++------------+--------------+
+|          1 | Laptop       |
+|          2 | Smartphone   |
+|          3 | Headphones   |
+|          4 | Mouse        |
++------------+--------------+
+4 rows in set (0.00 sec)
+
+mysql> -- intersect clause used
+mysql> SELECT customer_id, name FROM Customers
+    -> WHERE customer_id IN (SELECT DISTINCT customer_id FROM Orders)
+    -> INTERSECT
+    -> SELECT customer_id, name FROM Customers
+    -> WHERE city IN (SELECT DISTINCT city FROM Sellers);
++-------------+-----------------------+
+| customer_id | name                  |
++-------------+-----------------------+
+|           1 | Harshal Pravin Patil  |
+|           2 | Piyush Rajkumar Patil |
+|           3 | Ayush Raju Patil      |
++-------------+-----------------------+
+3 rows in set (0.00 sec)
+
+mysql> -- Retrieve all customers who have placed at least one order in each year available in the database
+mysql> SELECT customer_id, name FROM Customers
+    -> WHERE customer_id IN (
+    ->     SELECT customer_id FROM Orders GROUP BY customer_id, YEAR(order_date)
+    ->     HAVING COUNT(DISTINCT YEAR(order_date)) = (SELECT COUNT(DISTINCT YEAR(order_date)) FROM Orders)
+    -> );
++-------------+-------------------------+
+| customer_id | name                    |
++-------------+-------------------------+
+|           1 | Harshal Pravin Patil    |
+|           2 | Piyush Rajkumar Patil   |
+|           3 | Ayush Raju Patil        |
+|           4 | Rushikesh Gajanan Patil |
++-------------+-------------------------+
+4 rows in set (0.00 sec)
+
+mysql>
